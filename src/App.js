@@ -61,9 +61,20 @@ const App = () => {
 
   const [sidebar, setSidebar] = useState(false) 
   const [cart, setCart] = useState([])
+  const [total, setTotal] = useState(0.0)
 
-  const addItemToCart = (product, size) => {
-    setCart([...cart, new Array(product, size)])
+  const addItemToCart = (product, size) => { 
+    setTotal(total + product.price)
+    for (var i = 0; i < cart.length; i++) {
+      if(cart[i][0].sku === product.sku && cart[i][1] === size) {
+        let new_value = cart[i][2] + 1
+        cart[i] = new Array(product, size, new_value); 
+        setCart(cart)
+        setSidebar(true)
+        return; 
+      }
+    }
+    setCart([...cart, new Array(product, size, 0)])
     setSidebar(true)
     console.log(cart)
   }
@@ -71,7 +82,6 @@ const App = () => {
   const ProductList = ({products}) => {
     const styles = productStyles();
     const sizes = ['S', 'M', 'L', 'XL']
-  
     return(
       <Column.Group vcentered multiline className={styles.container}>
         {products.map(product => 
@@ -91,21 +101,39 @@ const App = () => {
     );
   }
 
+  const renderCartItems = () => {
+    return(
+      cart.length !== 0 ? 
+      cart.map((item) => 
+      <div>
+        <div>{item[0].title} ({item[1]}) ({item[2]})</div>
+      </div>
+      ) 
+      :
+      <div>cart is empty</div>
+    )
+  }
+
   const styles = productStyles();
   return (
     <div>
       <Sidebar
-        sidebar={<b>Here is your cart</b>}
+        sidebar={
+        <div>
+          <b>Here is your cart</b>
+          <b>{renderCartItems()}</b>
+          <div>total: ${total}</div>
+        </div>
+      }
         open={sidebar}
         onSetOpen={() => setSidebar(false)}
-        styles={{ sidebar: { background: "white", left: window.innerWidth - 300} }}
+        styles={{ sidebar: { background: "white", left: window.innerWidth - 300, position: 'fixed'} }}
         pullRight={true}
       >
         <button onClick={() => setSidebar(true)}> Cart </button>
       </Sidebar>
 
     <Container>
-      {/* <h1>{cart[0]}</h1> */}
       <text className={styles.header}>My Shopping Cart</text>
       <ProductList products={products}/>
     </Container>
