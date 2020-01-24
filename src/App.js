@@ -44,6 +44,20 @@ const productStyles = makeStyles(theme => ({
     marginRight: 3,
     marginLeft: 3
   },
+  remove: {
+    position: 'absolute',
+    right: 20,
+    marginTop: 30,
+  },
+  cartItem: {
+    marginTop: 50,
+    marginBottom: 50,
+    marginLeft: 15
+  },
+  cart: {
+    marginLeft: 10,
+    fontWeight: 'bold'
+  }
 }));
 
 
@@ -74,9 +88,27 @@ const App = () => {
         return; 
       }
     }
-    setCart([...cart, new Array(product, size, 0)])
+    setCart([...cart, new Array(product, size, 1)])
     setSidebar(true)
     console.log(cart)
+  }
+
+  const removeItemFromCart = (product, size) => { 
+    setTotal((total - product.price).toFixed(2))
+    for (var i = 0; i < cart.length; i++) {
+      if(cart[i][0].sku === product.sku && cart[i][1] === size) {
+        let new_value = cart[i][2] - 1
+        if(new_value === 0) {
+          cart.splice(i)
+        }
+        else {
+          cart[i] = new Array(product, size, new_value); 
+        }
+        setCart(cart)
+        setSidebar(true)
+        return; 
+      }
+    }
   }
   
   const ProductList = ({products}) => {
@@ -102,11 +134,15 @@ const App = () => {
   }
 
   const renderCartItems = () => {
+    const cartStyle = productStyles()
     return(
       cart.length !== 0 ? 
       cart.map((item) => 
-      <div>
-        <div>{item[0].title} ({item[1]}) ({item[2]})</div>
+      <div className = {cartStyle.cartItem}>
+        <div className={cartStyle.remove}>
+          <Button onClick={() => removeItemFromCart(item[0], item[1])} className={styles.sizes}>-1</Button>
+        </div>
+        <div>{item[0].title} ({item[1]}) ({item[2]})</div> 
       </div>
       ) 
       :
@@ -119,15 +155,15 @@ const App = () => {
     <div>
       <Sidebar
         sidebar={
-        <div>
-          <b>Here is your cart</b>
-          <b>{renderCartItems()}</b>
-          <div>total: ${total}</div>
+        <div className={styles.cart}>
+          <div>Here is your cart</div>
+          <div>{renderCartItems()}</div>
+          <div>Total: ${total}</div>
         </div>
       }
         open={sidebar}
         onSetOpen={() => setSidebar(false)}
-        styles={{ sidebar: { background: "white", left: window.innerWidth - 300, position: 'fixed'} }}
+        styles={{sidebar: { background: "white", left: window.innerWidth - 400, position: 'fixed'} }}
         pullRight={true}
       >
         <button onClick={() => setSidebar(true)}> Cart </button>
