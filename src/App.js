@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import "rbx/index.css";
-import { Card, Column, Container, Button } from "rbx";
+import { Card, Column, Container, Button, Title, Message } from "rbx";
 import { makeStyles } from "@material-ui/core/styles";
 import Divider from '@material-ui/core/Divider';
 import Sidebar from "react-sidebar";
 import "firebase/database";
 // import "firebase/auth";
 import firebase from "firebase/app";
+import 'firebase/auth';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpKL6lxJlwVKi2P4DyqkFKk_u6n5DqnbI",
@@ -77,7 +79,53 @@ const productStyles = makeStyles(theme => ({
 }));
 
 
+
 const App = () => {
+
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged(setUser);
+  }, []);
+
+  const Banner = ({ user, title }) => (
+    <React.Fragment>
+      { user ? <Welcome user={ user } /> : <SignIn /> }
+      <Title>{ title || '[loading...]' }</Title>
+    </React.Fragment>
+  );
+
+  const Welcome = ({ user }) => (
+    <Message color="info">
+      <Message.Header>
+        Welcome, {user.displayName}
+        <Button primary onClick={() => firebase.auth().signOut()}>
+          Log out
+        </Button>
+      </Message.Header>
+    </Message>
+  );
+
+  const SignIn = () => (
+    <StyledFirebaseAuth
+      uiConfig={uiConfig}
+      firebaseAuth={firebase.auth()}
+    />
+  );
+
+  const uiConfig = {
+    signInFlow: 'popup',
+    signInOptions: [
+      firebase.auth.GoogleAuthProvider.PROVIDER_ID
+    ],
+    callbacks: {
+      signInSuccessWithAuthResult: () => false
+    }
+  };
+
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged(setUser);
+  }, []);
+
   const [data, setData] = useState({});
   const products = Object.values(data);
   useEffect(() => {
@@ -104,10 +152,7 @@ const App = () => {
   }, []);
 
   const addItemToCart = (product, size) => { 
-    console.log(typeof total)
-    console.log(typeof product.price)
     let newTotal = (total + product.price) 
-    // newTotal = typeof newTotal === 'string' ? newTotal.parseInt().toFixed : newTotal.toFixed(2)
     setTotal(newTotal)
     for (var i = 0; i < cart.length; i++) {
       if(cart[i][0].sku === product.sku && cart[i][1] === size) {
@@ -120,7 +165,7 @@ const App = () => {
     }
     setCart([...cart, new Array(product, size, 1)])
     setSidebar(true)
-    console.log(cart)
+    // subtract from firebase 
   }
 
   const removeItemFromCart = (product, size) => { 
@@ -137,20 +182,7 @@ const App = () => {
     }
     setCart(newCart)
     setSidebar(true)
-    // for (var i = 0; i < cart.length; i++) {
-    //   if(cart[i][0].sku === product.sku && cart[i][1] === size) {
-    //     let new_value = cart[i][2] - 1
-    //     if(new_value === 0) {
-    //       cart.splice(i)
-    //     }
-    //     else {
-    //       cart[i] = new Array(product, size, new_value); 
-    //     }
-    //     setCart(cart)
-    //     setSidebar(true)
-    //     return; 
-    //   }
-    // }
+    // add item to firebase 
   }
   
   const isInStock = (product, size) => {
@@ -235,7 +267,7 @@ const App = () => {
       </Sidebar>
 
     <Container>
-      <text className={styles.header}>My Shopping Cart</text>
+      <Banner title={"Your Shopping Cart"} user={ user } />
       <ProductList products={products}/>
     </Container>
 
