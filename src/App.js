@@ -73,8 +73,9 @@ const productStyles = makeStyles(theme => ({
     marginLeft: 15
   },
   cart: {
-    marginLeft: 10,
-    fontWeight: 'bold'
+    marginLeft: 5,
+    fontWeight: 'bold', 
+    fontSize: 20,
   },
 }));
 
@@ -139,7 +140,7 @@ const App = () => {
 
   const [sidebar, setSidebar] = useState(false) 
   const [cart, setCart] = useState([])
-  const [total, setTotal] = useState(0.0)
+  const [total, setTotal] = useState(0)
 
   const [inventory, setInventory] = useState({});
 
@@ -152,8 +153,8 @@ const App = () => {
   }, []);
 
   const addItemToCart = (product, size) => { 
-    let newTotal = (total + product.price) 
-    setTotal(newTotal)
+    let newTotal = (total + product.price)
+    setTotal(parseFloat(newTotal.toFixed(2)))
     for (var i = 0; i < cart.length; i++) {
       if(cart[i][0].sku === product.sku && cart[i][1] === size) {
         let new_value = cart[i][2] + 1
@@ -166,11 +167,11 @@ const App = () => {
     setCart([...cart, new Array(product, size, 1)])
     setSidebar(true)
     // subtract from firebase 
-  }
+  } 
 
   const removeItemFromCart = (product, size) => { 
-    let newTotal = (total-product.price).toFixed(2)
-    setTotal(newTotal)
+    let newTotal = (total-product.price)
+    setTotal(parseFloat(newTotal.toFixed(2)))
     const itemIndex = cart.findIndex(item => item[0].sku === product.sku && item[1] === size) 
     console.log(itemIndex)
     let newCart 
@@ -238,11 +239,12 @@ const App = () => {
         <div className={cartStyle.remove}>
           <Button onClick={() => removeItemFromCart(item[0], item[1])} className={styles.sizes}>-1</Button>
         </div>
-        <div>{item[0].title} ({item[1]}) ({item[2]})</div> 
+        <div style={{fontWeight:'bold'}}>{item[0].title}</div> 
+        <div style={{fontStyle:'italic'}}>({item[1]}): {item[2]} x ${item[0].price}</div>
       </div>
       ) 
       :
-      <div>cart is empty</div>
+      <div className = {cartStyle.cartItem}>cart is empty</div>
     )
   }
 
@@ -252,10 +254,10 @@ const App = () => {
     <div>
       <Sidebar
         sidebar={
-        <div className={styles.cart}>
-          <div>Here is your cart</div>
+        <div>
+          <div className={styles.cart}>Your Cart</div>
           <div>{renderCartItems()}</div>
-          <div>Total: ${total}</div>
+          <div className={styles.cart}>Total: ${total}</div>
         </div>
       }
         open={sidebar}
@@ -263,11 +265,13 @@ const App = () => {
         styles={{sidebar: { background: "white", left: window.innerWidth - 400, position: 'fixed'} }}
         pullRight={true}
       >
-        <button onClick={() => setSidebar(true)}> Cart </button>
+        {/* <button onClick={() => setSidebar(true)}> Cart </button> */}
+       
       </Sidebar>
 
     <Container>
-      <Banner title={"Your Shopping Cart"} user={ user } />
+      <Banner title={"Your Shopping Cart"} user={ user } /> 
+      <Button align="right" onClick={() => setSidebar(true)}>Cart</Button>
       <ProductList products={products}/>
     </Container>
 
